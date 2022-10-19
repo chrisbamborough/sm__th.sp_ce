@@ -19,6 +19,8 @@
   "homepage": "https://github.com/chrisbamborough/smthspce#readme",
   "dependencies": {
     "canvas-sketch": "^0.7.6",
+    "canvas-sketch-util": "^1.10.0",
+    "open-simplex-noise": "^2.5.0",
     "three": "^0.145.0"
   }
 }

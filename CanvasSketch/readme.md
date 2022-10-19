@@ -4,7 +4,11 @@ npm install canvas-sketch-cli -g
 
 # to update CLI tool
 
-npm install canvas-sketch-cli@latest -g
+npm install canvas-sketch-cli@latest --global
+
+# Updating canvas-sketch (JavaScript API and Library)
+
+npm install canvas-sketch@latest
 
 # Make a new folder to hold all your sketches
 
@@ -45,3 +49,25 @@ https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API
 # 3D - WebGL
 
 https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API
+
+# Save animations to MP4 file
+
+canvas-sketch animation.js --output=tmp --stream
+
+# Save animations to GIF file instead
+
+canvas-sketch animation.js --output=tmp --stream=gif
+
+# Save animations to GIF but scale it down to 512 px wide
+
+canvas-sketch animation.js --output=tmp --stream [ gif --scale=512:-1 ]
+
+# With the browser in focus, you can use the following shortcuts to export your artwork:
+
+# Export a single frame
+
+Cmd + S or Ctrl + S
+
+# Start/stop exporting a sequence of frames
+
+Cmd + Shift + S or Ctrl + Shift + S
