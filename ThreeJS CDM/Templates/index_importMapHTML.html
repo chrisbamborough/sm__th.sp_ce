@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+
+  <script
+    async
+    src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"
+  ></script>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.130.1/build/three.module.js",
+        "three/examples/jsm/controls/OrbitControls.js": "https://unpkg.com/three@0.130.1/examples/jsm/controls/OrbitControls.js"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from "three";
+    import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+
+    /**
+     * Base
+     */
+    // Canvas
+    const canvas = document.querySelector("canvas.webgl");
+
+    // Scene
+    const scene = new THREE.Scene();
+
+    /**
+     * Sizes
+     */
+    const sizes = {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    };
+
+    window.addEventListener("resize", () => {
+      // Update sizes
+      sizes.width = window.innerWidth;
+      sizes.height = window.innerHeight;
+
+      // Update camera
+      camera.aspect = sizes.width / sizes.height;
+      camera.updateProjectionMatrix();
+
+      // Update renderer
+      renderer.setSize(sizes.width, sizes.height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+
+    /**
+     * Camera
+     */
+    // Base camera
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      sizes.width / sizes.height,
+      0.1,
+      100
+    );
+    camera.position.x = 1;
+    camera.position.y = 1;
+    camera.position.z = 1;
+    scene.add(camera);
+
+    // Controls
+    const controls = new OrbitControls(camera, canvas);
+    controls.enableDamping = true;
+
+    /**
+     * Cube
+     */
+    const cube = new THREE.Mesh(
+      new THREE.BoxGeometry(1, 1, 1),
+      new THREE.MeshBasicMaterial({ color: 0xff0000 })
+    );
+    scene.add(cube);
+
+    /**
+     * Renderer
+     */
+    const renderer = new THREE.WebGLRenderer({
+      canvas: canvas,
+      antialias: true,
+    });
+    renderer.setSize(sizes.width, sizes.height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    /**
+     * Animate
+     */
+    const clock = new THREE.Clock();
+    let lastElapsedTime = 0;
+
+    const tick = () => {
+      const elapsedTime = clock.getElapsedTime();
+      const deltaTime = elapsedTime - lastElapsedTime;
+      lastElapsedTime = elapsedTime;
+
+      // Update controls
+      controls.update();
+
+      // Cube animation
+      cube.rotation.y += 0.01;
+
+      // Render
+      renderer.render(scene, camera);
+
+      // Call tick again on the next frame
+      window.requestAnimationFrame(tick);
+    };
+
+    tick();
+  </script>
+
+  <body>
+    <!-- <script src="ImportMap_Template.js"></script> -->
+    <canvas class="webgl"></canvas>
+    <!-- <script src="Module_Template.js"></script> -->
+    <!-- <script src="Skypack_Template.js"></script> -->
+  </body>
+</html>

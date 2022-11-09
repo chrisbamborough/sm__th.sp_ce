@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+
+  <!-- Three.js code ></script> -->
+  <script type="module">
+    import * as THREE from "https://cdn.skypack.dev/three@0.140.0/build/three.module";
+    import { OrbitControls } from "https://threejsfundamentals.org/threejs/resources/threejs/r132/examples/jsm/controls/OrbitControls.js";
+    import openSimplexNoise from "https://cdn.skypack.dev/open-simplex-noise";
+
+    // Reference the Canvas
+    const canvas = document.querySelector("canvas.webgl");
+
+    // Setup the scene
+    const scene = new THREE.Scene();
+
+    // Setup camera
+    let camera = new THREE.PerspectiveCamera(
+      30,
+      innerWidth / innerHeight,
+      0.1,
+      1000
+    );
+    camera.position.set(1.5, -0.5, 6);
+
+    // Choose Renderer
+    const renderer = new THREE.WebGLRenderer({
+      canvas: canvas,
+      antialias: true,
+    });
+    renderer.setSize(innerWidth, innerHeight);
+
+    // Append our renderer to the webpage. Basically, this appends the `canvas` to our webpage.
+    document.body.appendChild(canvas);
+
+    // camera orbit controls
+    new OrbitControls(camera, canvas);
+
+    // WebGL background color
+    renderer.setClearColor("#000", 1);
+
+    // Setup vectors
+    let v3 = new THREE.Vector3();
+
+    // GEOMETRY
+    // setup box geometry
+    const planeGeometry = new THREE.BoxGeometry(2, 2, 1, 5, 5, 5);
+    //planeGeometry.translate(3, 0, 0);
+    planeGeometry.positionData = [];
+
+    for (let i = 0; i < planeGeometry.attributes.position.count; i++) {
+      v3.fromBufferAttribute(planeGeometry.attributes.position, i);
+      planeGeometry.positionData.push(v3.clone());
+    }
+
+    // MATERIALS
+    // setup planemesh material
+    const planeMesh = new THREE.MeshBasicMaterial({
+      color: 0x898989,
+      wireframe: true,
+    });
+
+    // MESH
+    // set up plane mesh
+    const plane = new THREE.Mesh(planeGeometry, planeMesh);
+    scene.add(plane);
+
+    // NOISE
+    const noise = openSimplexNoise.makeNoise4D(Date.now());
+    const clock = new THREE.Clock();
+
+    // ANIMATION
+    window.addEventListener("resize", () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+    });
+
+    renderer.setAnimationLoop(() => {
+      let t = clock.getElapsedTime() / 1;
+
+      planeGeometry.positionData.forEach((p, idx) => {
+        let sineWave = (Math.sin(t) * Math.PI) / 100 + 1;
+        let setNoise = noise(p.x, p.y, p.z, t / 3);
+        v3.copy(p).addScaledVector(p, setNoise);
+        planeGeometry.attributes.position.setXYZ(idx, v3.x, v3.y, v3.z);
+      });
+      planeGeometry.attributes.position.needsUpdate = true;
+      renderer.render(scene, camera);
+    });
+  </script>
+
+  <body>
+    <canvas class="webgl"></canvas>
+  </body>
+</html>
