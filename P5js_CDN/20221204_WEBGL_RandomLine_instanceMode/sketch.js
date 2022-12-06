@@ -25,4 +25,4 @@ const s = (sketch) => {
   };
 };
 
-let myp5 = new p5(s, "p5sketch");
+let myp5 = new p5(s);
