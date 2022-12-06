@@ -3,7 +3,7 @@ const s = (sketch) => {
   let y = 100;
 
   sketch.setup = () => {
-    sketch.createCanvas(400, 200, sketch.WEBGL);
+    sketch.createCanvas(sketch.windowWidth, sketch.windowHeight, sketch.WEBGL);
   };
 
   sketch.draw = () => {
@@ -25,5 +25,4 @@ const s = (sketch) => {
   };
 };
 
-// let myp5 = new p5(s, '');
 let myp5 = new p5(s, "p5sketch");
