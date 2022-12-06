@@ -3,11 +3,7 @@ const s = (sketch) => {
   let y = 100;
 
   sketch.setup = () => {
-    let cnv = sketch.createCanvas(
-      sketch.windowWidth,
-      sketch.windowHeight,
-      sketch.WEBGL
-    );
+    let cnv = sketch.createCanvas(300, 300, sketch.WEBGL);
     cnv.style("display", "block");
   };
 
