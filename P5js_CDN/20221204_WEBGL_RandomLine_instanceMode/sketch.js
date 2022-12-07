@@ -1,10 +1,14 @@
 const s = (sketch) => {
   let x = 100;
   let y = 100;
+  let sketchWidth;
+  let sketchHeight;
 
   sketch.setup = () => {
-    let cnv = sketch.createCanvas(300, 300, sketch.WEBGL);
-    cnv.style("display", "block");
+    sketchWidth = document.getElementById("p5sketch").offsetWidth;
+    sketchHeight = document.getElementById("p5sketch").offsetHeight;
+
+    let cnv = sketch.createCanvas(sketchWidth, sketchHeight, sketch.WEBGL);
   };
 
   sketch.draw = () => {
