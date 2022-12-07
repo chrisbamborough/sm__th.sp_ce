@@ -8,6 +8,9 @@ const s = (sketch) => {
     sketchWidth = document.getElementById("p5sketch").offsetWidth;
     sketchHeight = document.getElementById("p5sketch").offsetHeight;
 
+    sketch.print("canvas height " + sketchHeight);
+    sketch.print("canvas width " + sketchWidth);
+
     let cnv = sketch.createCanvas(sketchWidth, sketchHeight, sketch.WEBGL);
     cnv.id("sketchCanvas");
     let x = (sketch.windowWidth - sketch.width) / 2;
