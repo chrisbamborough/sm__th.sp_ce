@@ -9,6 +9,7 @@ const s = (sketch) => {
     sketchHeight = document.getElementById("p5sketch").offsetHeight;
 
     let cnv = sketch.createCanvas(sketchWidth, sketchHeight, sketch.WEBGL);
+    cnv.sketch.id("sketchCanvas");
   };
 
   sketch.draw = () => {
@@ -27,6 +28,12 @@ const s = (sketch) => {
     }
 
     sketch.noLoop();
+  };
+
+  sketch.windowResized = () => {
+    sketchWidth = document.getElementById("p5sketch").offsetWidth;
+    sketchHeight = document.getElementById("p5sketch").offsetHeight;
+    sketch.resizeCanvas(sketchWidth, sketchHeight);
   };
 };
 
