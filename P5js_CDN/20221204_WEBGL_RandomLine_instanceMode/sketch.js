@@ -9,7 +9,10 @@ const s = (sketch) => {
     sketchHeight = document.getElementById("p5sketch").offsetHeight;
 
     let cnv = sketch.createCanvas(sketchWidth, sketchHeight, sketch.WEBGL);
-    cnv.sketch.id("sketchCanvas");
+    cnv.id("sketchCanvas");
+    let x = (sketch.windowWidth - sketch.width) / 2;
+    let y = (sketch.windowHeight - sketch.height) / 2;
+    cnv.position(x, y);
   };
 
   sketch.draw = () => {
