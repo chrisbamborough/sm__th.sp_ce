@@ -1,6 +1,4 @@
 const s = (sketch) => {
-  let x = 100;
-  let y = 100;
   let sketchWidth;
   let sketchHeight;
 
