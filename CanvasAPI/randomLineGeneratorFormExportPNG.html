@@ -12,6 +12,7 @@
       <label for="numLines">Number of lines:</label>
       <input type="number" id="numLines" value="50" min="1" max="10" />
       <button type="button" id="drawLinesButton">Draw lines</button>
+      <button type="button" id="saveAsPNG">Save as PNG</button>
     </form>
 
     <script>
@@ -22,6 +23,7 @@
       // Get reference to form elements
       const numLinesInput = document.getElementById("numLines");
       const drawLinesButton = document.getElementById("drawLinesButton");
+      const button = document.getElementById("saveAsPNG");
 
       // Function to draw random lines on canvas
       function drawRandomLines(numLines) {
@@ -82,12 +84,8 @@
         }
       });
 
-      // Create the button element
-      const button = document.createElement("button");
-      button.textContent = "Save as PNG";
-
       // Add the button to the page
-      document.body.appendChild(button);
+      // document.body.appendChild(button);
 
       // Add an event listener to the button that will be called when the button is clicked
       button.addEventListener("click", () => {
