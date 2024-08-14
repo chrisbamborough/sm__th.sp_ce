@@ -1,2 +1,3 @@
 # smthspce
-An ongoing design program repository related to architecture. See individual folders for instructions.
+
+A repository of ongoing generative sketches.
