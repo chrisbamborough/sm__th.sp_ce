@@ -1,0 +1,92 @@
+<canvas id="rgbCanvas"></canvas>
+<canvas id="depthCanvas"></canvas>
+<canvas id="irCanvas"></canvas>
+<script>
+  const rgbCanvas = document.getElementById("rgbCanvas");
+  const depthCanvas = document.getElementById("depthCanvas");
+  const irCanvas = document.getElementById("irCanvas");
+
+  const width = 640,
+    height = 480;
+  [rgbCanvas, depthCanvas, irCanvas].forEach((c) => {
+    c.width = width;
+    c.height = height;
+  });
+
+  const ctxRGB = rgbCanvas.getContext("2d");
+  const ctxDepth = depthCanvas.getContext("2d");
+  const ctxIR = irCanvas.getContext("2d");
+
+  const socket = new WebSocket("ws://localhost:8765");
+  socket.binaryType = "arraybuffer";
+
+  let buffer = new Uint8Array();
+
+  socket.onmessage = async (event) => {
+    const chunk = new Uint8Array(event.data);
+    buffer = chunk;
+
+    // First 4 bytes = header length
+    const headerLen = new DataView(buffer.buffer).getUint32(0);
+    const headerJSON = new TextDecoder().decode(buffer.slice(4, 4 + headerLen));
+    const header = JSON.parse(headerJSON);
+
+    const offsetStart = 4 + headerLen;
+    const videoSize = header.sizes.video;
+    const depthSize = header.sizes.depth;
+    const irSize = header.sizes.ir;
+
+    const videoData = buffer.slice(offsetStart, offsetStart + videoSize);
+    const depthData = buffer.slice(
+      offsetStart + videoSize,
+      offsetStart + videoSize + depthSize
+    );
+    const irData = buffer.slice(offsetStart + videoSize + depthSize);
+
+    drawRGB(videoData);
+    drawDepth(
+      new Uint16Array(depthData.buffer, depthData.byteOffset, width * height)
+    );
+    drawIR(irData);
+  };
+
+  function drawRGB(bytes) {
+    const imageData = ctxRGB.createImageData(width, height);
+    for (let i = 0; i < width * height; i++) {
+      const j = i * 3;
+      const k = i * 4;
+      imageData.data[k] = bytes[j];
+      imageData.data[k + 1] = bytes[j + 1];
+      imageData.data[k + 2] = bytes[j + 2];
+      imageData.data[k + 3] = 255;
+    }
+    ctxRGB.putImageData(imageData, 0, 0);
+  }
+
+  function drawDepth(depthArray) {
+    const imageData = ctxDepth.createImageData(width, height);
+    for (let i = 0; i < depthArray.length; i++) {
+      const v = depthArray[i];
+      const b = 255 - Math.min((v / 2048) * 255, 255);
+      const j = i * 4;
+      imageData.data[j] = b;
+      imageData.data[j + 1] = b;
+      imageData.data[j + 2] = b;
+      imageData.data[j + 3] = 255;
+    }
+    ctxDepth.putImageData(imageData, 0, 0);
+  }
+
+  function drawIR(bytes) {
+    const imageData = ctxIR.createImageData(width, height);
+    for (let i = 0; i < width * height; i++) {
+      const v = bytes[i];
+      const j = i * 4;
+      imageData.data[j] = v;
+      imageData.data[j + 1] = v;
+      imageData.data[j + 2] = v;
+      imageData.data[j + 3] = 255;
+    }
+    ctxIR.putImageData(imageData, 0, 0);
+  }
+</script>
