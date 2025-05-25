@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Polyphonic Polyrhythm Visual Composer</title>
+    <link rel="icon" href="data:," />
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        background: #000;
+        overflow: hidden;
+        font-family: sans-serif;
+      }
+      canvas {
+        display: block;
+      }
+      #controls {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 10px;
+        border-radius: 8px;
+        z-index: 1000;
+      }
+      #controls label {
+        display: block;
+        margin-bottom: 10px;
+      }
+      #controls input[type="range"] {
+        width: 100px;
+        appearance: none;
+        height: 6px;
+        background: #ccc;
+        border-radius: 3px;
+        outline: none;
+      }
+      #controls input[type="range"]::-webkit-slider-thumb {
+        appearance: none;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #000;
+        cursor: pointer;
+        border: 2px solid #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="controls">
+      <label
+        >Pad Volume
+        <input type="range" id="padVol" min="0" max="1" step="0.01" value="1"
+      /></label>
+      <label
+        >Pluck Volume
+        <input type="range" id="pluckVol" min="0" max="1" step="0.01" value="1"
+      /></label>
+      <label
+        >Lead Volume
+        <input type="range" id="leadVol" min="0" max="1" step="0.01" value="1"
+      /></label>
+      <label
+        >Agent Speed
+        <input
+          type="range"
+          id="speedSlider"
+          min="0.1"
+          max="2"
+          step="0.01"
+          value="1"
+      /></label>
+      <label
+        >Trail Alpha
+        <input
+          type="range"
+          id="alphaSlider"
+          min="0.01"
+          max="0.2"
+          step="0.01"
+          value="0.05"
+      /></label>
+      <label
+        >Audio Sensitivity
+        <input
+          type="range"
+          id="ampSlider"
+          min="0.5"
+          max="8"
+          step="0.1"
+          value="4"
+      /></label>
+      <button id="toggle">Start</button>
+    </div>
+    <canvas id="visual"></canvas>
+
+    <script src="https://cdn.jsdelivr.net/npm/tone@14.8.39/build/Tone.js"></script>
+    <script src="https://unpkg.com/simplex-noise@2.4.0/simplex-noise.js"></script>
+    <script>
+      const canvas = document.getElementById("visual");
+      const ctx = canvas.getContext("2d");
+      let width, height;
+      function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      }
+      window.addEventListener("resize", resize);
+      resize();
+
+      const simplex = new SimplexNoise();
+      const meter = new Tone.Meter();
+      Tone.Transport.bpm.value = 65;
+
+      // Effects and instruments
+      const reverb1 = new Tone.Reverb({
+        decay: 6,
+        preDelay: 0.1,
+      }).toDestination();
+      const reverb2 = new Tone.Reverb({ decay: 3 }).toDestination();
+      const delay = new Tone.FeedbackDelay("8n", 0.4).toDestination();
+
+      const padGain = new Tone.Gain(1).connect(reverb1);
+      const pad = new Tone.PolySynth(Tone.Synth, {
+        envelope: { attack: 2, release: 4 },
+      })
+        .connect(padGain)
+        .connect(meter);
+
+      const pluckGain = new Tone.Gain(1).connect(delay).connect(reverb2);
+      const pluck = new Tone.PolySynth(Tone.Synth, {
+        oscillator: { type: "triangle" },
+        envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.1 },
+      })
+        .connect(pluckGain)
+        .connect(meter);
+
+      const leadGain = new Tone.Gain(1)
+        .connect(new Tone.Filter(1000, "lowpass"))
+        .connect(delay)
+        .connect(reverb2);
+      const lead = new Tone.PolySynth(Tone.Synth, {
+        oscillator: { type: "square" },
+        envelope: { attack: 0.01, decay: 0.2, sustain: 0.3, release: 0.5 },
+      })
+        .connect(leadGain)
+        .connect(meter);
+
+      const chords = [
+        ["C4", "E4", "G4"],
+        ["F4", "A4", "C5"],
+        ["G4", "B4", "D5"],
+      ];
+
+      const agents = Array.from({ length: 150 }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        speed: 1 + Math.random() * 2,
+      }));
+      let visualActive = false,
+        t = 0;
+
+      function draw() {
+        if (!visualActive) return;
+        requestAnimationFrame(draw);
+        const level = meter.getValue();
+        const amp = Math.max(0, level);
+
+        const trailAlpha = parseFloat(
+          document.getElementById("alphaSlider").value
+        );
+        ctx.fillStyle = `rgba(0,0,0,${trailAlpha})`;
+        ctx.fillRect(0, 0, width, height);
+
+        const tScale = 0.005;
+        const audioMultiplier = parseFloat(
+          document.getElementById("ampSlider").value
+        );
+        const ampScale = 1 + amp * audioMultiplier;
+
+        const userSpeed = parseFloat(
+          document.getElementById("speedSlider").value
+        );
+
+        agents.forEach((agent) => {
+          const angle =
+            simplex.noise3D(agent.x * tScale, agent.y * tScale, t * 0.5) *
+            Math.PI *
+            2;
+          const dx = Math.cos(angle) * agent.speed * ampScale * userSpeed;
+          const dy = Math.sin(angle) * agent.speed * ampScale * userSpeed;
+
+          const xPrev = agent.x;
+          const yPrev = agent.y;
+
+          agent.x += dx;
+          agent.y += dy;
+
+          // softly re-enter from opposite edge with jitter to avoid grid-like trails
+          if (agent.x < 0) agent.x = width;
+          if (agent.x > width) agent.x = 0;
+          if (agent.y < 0) agent.y = height;
+          if (agent.y > height) agent.y = 0;
+
+          ctx.strokeStyle = `hsl(${(angle * 180) / Math.PI}, 100%, ${
+            40 + amp * 30
+          }%)`;
+          const distance = Math.hypot(agent.x - xPrev, agent.y - yPrev);
+          if (distance < 100) {
+            // only draw short connections
+            ctx.beginPath();
+            ctx.moveTo(xPrev, yPrev);
+            ctx.lineTo(agent.x, agent.y);
+            ctx.stroke();
+          }
+        });
+        t += 0.01;
+      }
+
+      let started = false;
+      let evolutionIndex = 0;
+
+      const toggleBtn = document.getElementById("toggle");
+      toggleBtn.addEventListener("click", async () => {
+        if (!started) {
+          await Tone.start();
+          Tone.Transport.start();
+          visualActive = true;
+          draw();
+          started = true;
+          toggleBtn.textContent = "Stop";
+
+          const interval = 30000;
+          const sequence = ["pad", "pluck", "lead"];
+
+          Tone.Transport.scheduleRepeat((time) => {
+            const chord = chords[Math.floor(Math.random() * chords.length)];
+
+            padGain.gain.value = parseFloat(
+              document.getElementById("padVol").value
+            );
+            pluckGain.gain.value = parseFloat(
+              document.getElementById("pluckVol").value
+            );
+            leadGain.gain.value = parseFloat(
+              document.getElementById("leadVol").value
+            );
+
+            if (evolutionIndex >= 0) {
+              pad.triggerAttackRelease(chord, "2n", time);
+            }
+            if (evolutionIndex >= 1) {
+              pluck.triggerAttackRelease(chord, "8n", time);
+            }
+            if (evolutionIndex >= 2) {
+              const arpeggio = chord.map((n) =>
+                Tone.Frequency(n).transpose(12)
+              );
+              arpeggio.forEach((note, i) => {
+                lead.triggerAttackRelease(note, "16n", time + i * 0.1);
+              });
+            }
+          }, "2n");
+
+          const evolve = () => {
+            evolutionIndex = Math.min(evolutionIndex + 1, sequence.length);
+            if (evolutionIndex < sequence.length) {
+              setTimeout(evolve, interval);
+            }
+          };
+          evolve();
+        } else {
+          Tone.Transport.stop();
+          visualActive = false;
+          toggleBtn.textContent = "Start";
+          started = false;
+          evolutionIndex = 0;
+        }
+      });
+    </script>
+  </body>
+</html>
